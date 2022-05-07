@@ -37,7 +37,7 @@ app.post('/tasks',async (req,res)=>{
 app.get('/all/users',async (req,res)=>{
     try {
         let users = await User.find({})
-        res.send(users)
+        res.status(201).send(users)
     } catch (error) {
         res.status(500).send(`Internal server error ${error}`)
     }
@@ -57,6 +57,29 @@ app.get('/user/:id',async (req,res)=>{
         
     }
 })
+
+//update user by id
+
+app.patch('/update/user/:id',async (req,res)=>{
+    let updates = Object.keys(req.body)
+    let allowedUpdates = ['name','email','age','password']
+    let isValidUpdate = updates.every(update=>allowedUpdates.includes(update))
+    if(!isValidUpdate){
+        return res.status(400).send('Invalid updates')
+    }
+    
+    try {
+        let id = req.params.id
+        let user = await User.findByIdAndUpdate(id,req.body,{new:true})
+        console.log(typeof user)
+        console.log(JSON.stringify(user))
+        // let user = await User.findByIdAndUpdate(id,{name:name})
+        res.status(201).send(user)
+    } catch (error) {
+        res.status(500).send(`Internal server error ${error}`)
+    }
+})
+
 //get all tasks
 
 app.get('/all/tasks',async (req,res)=>{
@@ -82,6 +105,28 @@ app.get('/task/:id',async (req,res)=>{
     //    console.log(data)
     } catch (error) {
         
+    }
+})
+
+//update task by id
+
+app.patch('/update/task/:id',async (req,res)=>{
+    let updates = Object.keys(req.body)
+    let allowedUpdates = ['description','completed']
+    let isValidUpdate = updates.every(update => allowedUpdates.includes(update))
+    if(!isValidUpdate){
+        return res.status(400).send('Invalid update')
+    }
+
+    try {
+        let id = req.params.id
+        let task = await Tasks.findByIdAndUpdate(id,req.body,{runValidators:true,new:true})
+        if(!task){
+            res.status(404).send('Task not found')
+        }
+        res.send(task)
+    } catch (error) {
+        res.status(500).send(error)
     }
 })
 
