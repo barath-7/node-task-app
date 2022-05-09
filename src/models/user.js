@@ -1,10 +1,10 @@
+const bcryptjs = require("bcryptjs")
 const mongoose = require("mongoose")
 
 //add email model
 //add validation to age
 //add validator package
-
-const User = mongoose.model('User',{
+const userSchema = new mongoose.Schema({
     name :{
         type:String,
         required:true,
@@ -31,5 +31,14 @@ const User = mongoose.model('User',{
         trim:true,
     }
 })
+
+userSchema.pre('save',async function(next){
+let user = this
+if(user.isModified('password')){
+    user.password = await bcryptjs.hash(user.password,8)
+}
+    next()
+})
+const User = mongoose.model('User',userSchema)
 
 module.exports = User
