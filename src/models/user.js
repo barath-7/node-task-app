@@ -1,4 +1,5 @@
 const bcryptjs = require("bcryptjs")
+const jwt = require("jsonwebtoken")
 const mongoose = require("mongoose")
 
 //add email model
@@ -29,8 +30,23 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true,
         trim:true,
-    }
+        unique:true
+    },
+    tokens:[{
+        token:{
+            type:String,
+            required:true
+        }
+    }]
 })
+
+userSchema.methods.generateAuthToken = async function(){
+    const user = this
+    let token = jwt.sign({_id:user._id.toString()},'secretkey')
+    user.tokens=user.tokens.concat({token})
+    await user.save()
+    return token
+}
 
 
 userSchema.statics.findByCredentials = async (email,password)=>{

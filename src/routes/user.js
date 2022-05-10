@@ -7,7 +7,8 @@ router.post("/users", async (req, res) => {
   let user = new User(req.body);
   try {
     await user.save();
-    res.send(user);
+  let token = await user.generateAuthToken()
+    res.send({user,token});
   } catch (error) {
     res.status(400).send("Error- " + error);
   }
@@ -88,13 +89,16 @@ router.post("/users/login",async (req,res)=>{
   //custom method, which will be defined in the model
   try {
   let user = await User.findByCredentials(req.body.email,req.body.password)
-  res.send(user)
+  
+  let token = await user.generateAuthToken()
+  res.send({user,token})
     // res.json({
     //   user,
     //   message:'Login succesful'
     // })
   } catch (error) {
-    res.status(400).send(error)
+    //console.log(error.message)
+    res.status(400).send(error.message) 
   }
 
 })
