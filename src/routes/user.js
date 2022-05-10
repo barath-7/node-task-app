@@ -82,4 +82,20 @@ router.delete("/delete/user/:id", async (req, res) => {
   }
 });
 
+
+//login
+router.post("/users/login",async (req,res)=>{
+  //custom method, which will be defined in the model
+  try {
+  let user = await User.findByCredentials(req.body.email,req.body.password)
+  res.send(user)
+    // res.json({
+    //   user,
+    //   message:'Login succesful'
+    // })
+  } catch (error) {
+    res.status(400).send(error)
+  }
+
+})
 module.exports = router;

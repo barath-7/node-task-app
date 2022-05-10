@@ -32,6 +32,20 @@ const userSchema = new mongoose.Schema({
     }
 })
 
+
+userSchema.statics.findByCredentials = async (email,password)=>{
+    let user = await User.findOne({email})
+    if(!user){
+        throw new Error('User not found')
+    }
+
+    let isMatch = await bcryptjs.compare(password,user.password)
+    if(!isMatch){
+        throw new Error('Invalid password')
+    }
+
+    return user;
+}
 userSchema.pre('save',async function(next){
 let user = this
 if(user.isModified('password')){
@@ -39,6 +53,9 @@ if(user.isModified('password')){
 }
     next()
 })
+
+
+
 const User = mongoose.model('User',userSchema)
 
 module.exports = User
