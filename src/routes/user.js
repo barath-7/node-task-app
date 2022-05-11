@@ -1,4 +1,5 @@
 const express = require("express");
+const authMiddleware = require("../middleware/authMiddleware");
 const User = require("../models/user");
 const router = express.Router();
 
@@ -16,17 +17,20 @@ router.post("/users", async (req, res) => {
 
 //get all users
 
-router.get("/all/users", async (req, res) => {
+router.get("/all/users", authMiddleware,async (req, res) => {
   try {
     let users = await User.find({});
     res.status(201).send(users);
   } catch (error) {
     res.status(500).send(`Internal server error ${error}`);
   }
+  //comment all the code above and use the below code
+
+  //res.send(req.user)
 });
 //get user by id
 
-router.get("/user/:id", async (req, res) => {
+router.get("/user/:id" ,async (req, res) => {
   // console.log(req.params.id)
   let id = req.params.id;
 
@@ -101,5 +105,30 @@ router.post("/users/login",async (req,res)=>{
     res.status(400).send(error.message) 
   }
 
+})
+
+//logout from one session
+
+router.post('/users/logout',authMiddleware,async (req,res)=>{
+  try {
+    req.user.tokens = req.user.tokens.filter(element=>element.token!==req.token)
+    await req.user.save()
+    res.send('Logged out succesfully')
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+//logout all session
+
+router.post('/users/logout/allsession',authMiddleware,async (req,res)=>{
+  try {
+    req.user.tokens=[]
+  await req.user.save()
+  res.send('Logged out from all the sessions')
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+  
 })
 module.exports = router;
