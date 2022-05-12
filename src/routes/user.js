@@ -43,7 +43,7 @@ router.get("/user/:id" ,async (req, res) => {
 
 //update user by id
 
-router.patch("/update/user/:id", async (req, res) => {
+router.patch("/update/user", authMiddleware,async (req, res) => {
   let updates = Object.keys(req.body);
   let allowedUpdates = ["name", "email", "age", "password"];
   let isValidUpdate = updates.every((update) =>
@@ -56,10 +56,12 @@ router.patch("/update/user/:id", async (req, res) => {
   try {
     let id = req.params.id;
     // let user = await User.findByIdAndUpdate(id, req.body, { new: true });
-    let user = await User.findById(id)
-    if(!user){
-      return res.status(400).send("User not found");
-    }
+    // let user = await User.findById(id)
+    let user = req.user
+    //console.log(user)
+    // if(!user){
+    //   return res.status(400).send("User not found");
+    // }
     updates.forEach(update=>user[update]=req.body[update])
     await user.save()
     
@@ -73,15 +75,17 @@ router.patch("/update/user/:id", async (req, res) => {
 
 //delete user by id
 
-router.delete("/delete/user/:id", async (req, res) => {
+router.delete("/delete/user/profile", authMiddleware,async (req, res) => {
   let id = req.params.id;
 
   try {
-    let deletedUser = await User.findByIdAndDelete(id);
-    if (!deletedUser) {
-      return res.status(404).send("User not found");
-    }
-    res.send(deletedUser);
+    // let deletedUser = await User.findByIdAndDelete(id);
+    // if (!deletedUser) {
+    //   return res.status(404).send("User not found");
+    // }
+    // res.send(deletedUser);
+    await req.user.remove()
+    res.send(req.user)
   } catch (error) {
     res.status(500).send(error);
   }
