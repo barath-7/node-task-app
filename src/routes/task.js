@@ -24,11 +24,23 @@ router.post("/tasks",authMiddleware, async (req, res) => {
 router.get("/all/tasks", authMiddleware,async (req, res) => {
   try {
     // let tasks = await Tasks.find({});
-
-    let tasks = await Tasks.find({owner:req.user._id});
+    let sortBy = req.query.sortBy=='asc' ? 1: -1
+    let filterObj = {}
+    let limit = parseInt(req.query.limit)
+    let skip = parseInt(req.query.skip)
+    if(req.query.completed){
+      filterObj={owner:req.user._id,completed:req.query.completed==='true'}
+    }else{
+      filterObj={
+        owner:req.user._id
+      }
+    }
+    let tasks = await Tasks.find(filterObj).skip(skip).limit(limit).sort([['createdAt',sortBy]]);
     res.send(tasks);
+
     // await req.user.populate('tasks')
     // res.send(req.user.tasks)
+
   } catch (error) {
     res.status(500).send(`Internal server error ${error}`);
   }
