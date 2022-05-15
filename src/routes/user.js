@@ -2,6 +2,7 @@ const express = require("express");
 const authMiddleware = require("../middleware/authMiddleware");
 const User = require("../models/user");
 const router = express.Router();
+const multer = require('multer')
 
 router.post("/users", async (req, res) => {
   // let {name,age,password,email} = req.body
@@ -18,15 +19,15 @@ router.post("/users", async (req, res) => {
 //get all users
 
 router.get("/all/users", authMiddleware,async (req, res) => {
-  try {
-    let users = await User.find({});
-    res.status(201).send(users);
-  } catch (error) {
-    res.status(500).send(`Internal server error ${error}`);
-  }
+  // try {
+  //   let users = await User.find({});
+  //   res.status(201).send(users);
+  // } catch (error) {
+  //   res.status(500).send(`Internal server error ${error}`);
+  // }
   //comment all the code above and use the below code
 
-  //res.send(req.user)
+  res.send(req.user)
 });
 //get user by id
 
@@ -134,5 +135,38 @@ router.post('/users/logout/allsession',authMiddleware,async (req,res)=>{
     res.status(500).send(error.message)
   }
   
+})
+
+//upload user profile pic
+
+const upload = multer({
+    limits:{
+      fileSize:1000000
+    },
+    fileFilter(req,file,cb){
+      if(!file.originalname.match(/\.(jpg|jpeg|png)$/)){
+        return cb(new Error("Only images are allowed"))
+      }
+      cb(undefined,true)
+    }
+})
+router.post('/user/profile/upload',authMiddleware,upload.single('profile'),async (req,res)=>{
+    req.user.avatar=req.file.buffer
+    await req.user.save()
+    res.send('Profile picture upload succesful')
+},(error,req,res,next)=>{
+  res.status(400).send({
+    error:error.message
+  })
+})
+//delete profile pic
+router.delete('/user/profile/delete',authMiddleware,async (req,res)=>{
+  if(!req.user.avatar){
+    return res.status(400).send("no profile pic found")
+  }
+req.user.avatar=undefined
+await req.user.save()
+res.send('Profile pic deleted succesfully !')
+
 })
 module.exports = router;
