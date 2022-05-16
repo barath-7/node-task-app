@@ -2,7 +2,8 @@ const express = require("express");
 const authMiddleware = require("../middleware/authMiddleware");
 const User = require("../models/user");
 const router = express.Router();
-const multer = require('multer')
+const multer = require('multer');
+const sharp = require("sharp");
 
 router.post("/users", async (req, res) => {
   // let {name,age,password,email} = req.body
@@ -151,7 +152,8 @@ const upload = multer({
     }
 })
 router.post('/user/profile/upload',authMiddleware,upload.single('profile'),async (req,res)=>{
-    req.user.avatar=req.file.buffer
+  const buffer = await sharp(req.file.buffer).png().resize({width:250,height:250}).toBuffer()
+    req.user.avatar=buffer
     await req.user.save()
     res.send('Profile picture upload succesful')
 },(error,req,res,next)=>{
@@ -168,5 +170,21 @@ req.user.avatar=undefined
 await req.user.save()
 res.send('Profile pic deleted succesfully !')
 
+})
+
+router.get('/user/:id/profile',async (req,res)=>{
+  let id=req.params.id
+  try {
+  let user = await User.findById({_id:id})
+
+  if(!user || !user.avatar){
+    throw new Error('Error while fetching user image')
+  }
+  res.set('Content-Type','image/png')
+  res.send(user.avatar)
+    
+  } catch (error) {
+    return res.status(400).send(error.message)
+  }
 })
 module.exports = router;
